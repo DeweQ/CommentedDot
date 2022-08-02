@@ -11,7 +11,8 @@ namespace CommentedDotApi.Library.DataAccess
     public class AppDbContext : DbContext
     {
 
-        List<DotModel> Dots { get; set; } = null!;
+        public DbSet<DotModel> Dots { get; set; } = null!;
+        public DbSet<CommentModel> Comments {get;set;} =null!;
 
         public AppDbContext( DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -20,7 +21,12 @@ namespace CommentedDotApi.Library.DataAccess
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<CommentModel>();
+            modelBuilder.Entity<DotModel>().HasMany(dm=> dm.Comments).WithOne().OnDelete(DeleteBehavior.SetNull);
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
         }
     }
 }
