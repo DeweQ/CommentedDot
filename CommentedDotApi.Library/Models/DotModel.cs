@@ -14,7 +14,7 @@ namespace CommentedDotApi.Library.Models
         public int Y { get; set; }
         public double Radius { get; set; }
         public Color Color { get; set; }
-        public List<Comment> Comments { get; set; } = new();
+        public List<CommentModel> Comments { get; set; } = new();
 
     }
 }
