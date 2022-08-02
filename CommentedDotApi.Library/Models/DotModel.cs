@@ -13,7 +13,7 @@ namespace CommentedDotApi.Library.Models
         public int X { get; set; }
         public int Y { get; set; }
         public double Radius { get; set; }
-        public Color Color { get; set; }
+        public string HEXColor { get; set; }
         public List<CommentModel> Comments { get; set; } = new();
 
     }
