@@ -2,9 +2,55 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>wwwRoot</title>
+    <title>Commented Dots</title>
+    <link href="https://kendo.cdn.telerik.com/2022.2.802/styles/kendo.default-main.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-1.12.3.min.js"></script>
+    <script src="https://kendo.cdn.telerik.com/2022.2.802/js/kendo.all.min.js"></script>
+    <script src="https://unpkg.com/konva@8.3.5/konva.min.js"></script>
 </head>
 <body>
+    <div id="container"></div>
+    <script>
+        function setStage() {
+            var width = window.innerWidth;
+            var height = window.innerHeight;
 
+            var stage = new Konva.Stage({
+                container: 'container',
+                width: width,
+                height: height,
+            });
+            return stage;
+        }
+        //get all dots
+        $(function GetDots() {
+            //call api
+            $.ajax({
+                url: "api/CommentedDots/GetAll",
+                contentType: "json",
+                success: function (data) {
+                    //draw dots on success;
+                    var stage = setStage();
+                    var layer = new Konva.Layer();
+                    $.each(data, function (index, item) {
+                        var circle = drawDot(item);
+                        layer.add(circle);
+                    });
+                    stage.add(layer);
+                }
+            });
+        });
+
+        //draw dot
+        function drawDot(dot) {
+            var circle = new Konva.Circle({
+                x: dot.x,
+                y: dot.y,
+                radius: dot.radius,
+                fill: dot.hexColor,
+            });
+            return circle;
+        };
+    </script>
 </body>
 </html>
