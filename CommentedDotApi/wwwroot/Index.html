@@ -11,6 +11,24 @@
 <body>
     <div id="container"></div>
     <script>
+        $(onLoad());
+
+        function onLoad() {
+
+            var stage = setStage();
+            var layer = new Konva.Layer();
+            let dots = $getDots();
+            dots.success(data => {
+                $.each(data, function (index, dot) {
+                    drawDot(dot, layer);
+                });
+            })
+            layer.on('dblclick', (e) => DeleteDot(1));
+            stage.add(layer);
+            
+
+        };
+
         function setStage() {
             var width = window.innerWidth;
             var height = window.innerHeight;
@@ -22,35 +40,101 @@
             });
             return stage;
         }
-        //get all dots
-        $(function GetDots() {
-            //call api
-            $.ajax({
-                url: "api/CommentedDots/GetAll",
-                contentType: "json",
-                success: function (data) {
-                    //draw dots on success;
-                    var stage = setStage();
-                    var layer = new Konva.Layer();
-                    $.each(data, function (index, item) {
-                        var circle = drawDot(item);
-                        layer.add(circle);
-                    });
-                    stage.add(layer);
-                }
-            });
-        });
 
+        //get all dots
+        function $getDots() {
+            //call api
+            return $.ajax({
+                url: "api/CommentedDots/GetAll",
+                contentType: "json"
+            });
+        }
+
+        function drawDot(dot, layer) {
+            var circle = drawCircle(dot);
+            layer.add(circle);
+            $.each(dot.comments, function (index, comment) {
+                var x = dot.x;
+                var y = dot.y + dot.radius + 5;
+                var comment = drawComment(comment, index, x, y);
+                layer.add(comment.rect);
+                layer.add(comment.text);
+            });
+
+
+        }
         //draw dot
-        function drawDot(dot) {
+        function drawCircle(dot) {
             var circle = new Konva.Circle({
+                id: dot.id,
                 x: dot.x,
                 y: dot.y,
                 radius: dot.radius,
                 fill: dot.hexColor,
             });
+            circle.on("dblclick", (e) => DeleteDot(dot.id));
             return circle;
         };
+
+        function drawText(comment, x, y) {
+            var text = new Konva.Text({
+                x: x,
+                y: y,
+                text: comment.text,
+                fontSize: 24,
+                fontFamily: 'Calibri',
+                padding: 7,
+                fill: 'green',
+                align: 'center',
+            });
+            return text;
+        }
+        function drawRect(comment, text, x, y) {
+            var rect = new Konva.Rect({
+                x: x,
+                y: y,
+                stroke: '#555',
+                strokeWidth: 2,
+                width: text.width(),
+                height: text.height() - 3,
+                fill: comment.hexColor,
+                padding: 5,
+                margin: 5
+            });
+            return rect;
+        }
+
+        function drawComment(comment, index, x, y) {
+            var text = drawText(comment, x, y)
+            var rect = drawRect(comment, text, x, y);
+
+            var offsetX = text.width() / 2;
+            var offsetY = -text.height() * index;
+
+            text.offsetX(offsetX);
+            text.offsetY(offsetY);
+
+            rect.offsetX(offsetX);
+            rect.offsetY(offsetY);
+
+
+            return ({
+                text: text,
+                rect: rect
+            });
+        }
+
+        function DeleteDot(id) {
+            //call api
+            return $.ajax({
+                url: "api/CommentedDots/DeleteDot?id=" + id,
+                type: "DELETE",
+                success: onLoad()
+            });
+
+            //onLoad();
+        }
+
     </script>
 </body>
 </html>
