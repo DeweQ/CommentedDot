@@ -11,68 +11,108 @@
 <body>
     <div id="container"></div>
     <script>
-        $(onLoad());
-
-        function onLoad() {
-
-            var stage = setStage();
-            var layer = new Konva.Layer();
-            let dots = $getDots();
-            dots.success(data => {
-                $.each(data, function (index, dot) {
-                    drawDot(dot, layer);
-                });
-            })
-            layer.on('dblclick', (e) => DeleteDot(1));
-            stage.add(layer);
-            
-
-        };
-
-        function setStage() {
-            var width = window.innerWidth;
-            var height = window.innerHeight;
-
-            var stage = new Konva.Stage({
-                container: 'container',
-                width: width,
-                height: height,
-            });
-            return stage;
+        class CommentModel {
+            constructor(id, text, color) {
+                this.id = id;
+                this.text = text;
+                this.color = color;
+            };
         }
 
-        //get all dots
+        class DotModel {
+            constructor(id, x, y, radius, color, comments) {
+                this.id = id;
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.color = color;
+                this.comments = comments;
+            }
+        }
+
+        $(onLoad())
+
+        function onLoad() {
+            const array = [];
+            var promise = $getDots();
+            promise.success(data => {
+                pushDotsToArray(data, array);
+                var stage = setStage();
+                var layers = drawDots(array);
+                $.each(layers, (index, item) => {
+                    stage.add(item);
+                })
+            });
+        }
+
         function $getDots() {
             //call api
             return $.ajax({
                 url: "api/CommentedDots/GetAll",
-                contentType: "json"
+                contentType: "json",
             });
         }
 
+        function pushDotsToArray(dots, array) {
+            $.each(dots, function (index, dot) {
+                const commentList = [];
+                $.each(dot.comments, function (index, comment) {
+                    var c = new CommentModel(comment.id, comment.text, comment.hexColor);
+                    commentList.push(c);
+                });
+                var d = new DotModel(dot.id, dot.x, dot.y, dot.radius, dot.hexColor, commentList);
+                array.push(d);
+            });
+        }
+
+        function drawDots(array) {
+            const layers = [];
+            $.each(array, function (index, dot) {
+                var layer = new Konva.Layer();
+                var shapes = drawDot(dot, layer);
+                $.each(shapes, function (index, item) {
+                    layer.add(item);
+                });
+                layers.push(layer);
+            });
+
+            return layers;
+        }
+
         function drawDot(dot, layer) {
+            const shapes = [];
             var circle = drawCircle(dot);
-            layer.add(circle);
+            circle.on('dblclick', (e) => deleteDot(dot, layer));
+            shapes.push(circle);
             $.each(dot.comments, function (index, comment) {
                 var x = dot.x;
                 var y = dot.y + dot.radius + 5;
                 var comment = drawComment(comment, index, x, y);
-                layer.add(comment.rect);
-                layer.add(comment.text);
+                shapes.push(comment.rect);
+                shapes.push(comment.text);
             });
-
-
+            return shapes;
         }
-        //draw dot
+
+        function deleteDot(dot, layer) {
+            //call api
+            return $.ajax({
+                url: "api/CommentedDots/DeleteDot?id=" + dot.id,
+                type: "DELETE",
+                success: () => {
+                    layer.remove();
+                }
+            });
+        }
+
         function drawCircle(dot) {
             var circle = new Konva.Circle({
-                id: dot.id,
+                id: "dot" + dot.id,
                 x: dot.x,
                 y: dot.y,
                 radius: dot.radius,
-                fill: dot.hexColor,
+                fill: dot.color,
             });
-            circle.on("dblclick", (e) => DeleteDot(dot.id));
             return circle;
         };
 
@@ -89,6 +129,7 @@
             });
             return text;
         }
+
         function drawRect(comment, text, x, y) {
             var rect = new Konva.Rect({
                 x: x,
@@ -97,7 +138,7 @@
                 strokeWidth: 2,
                 width: text.width(),
                 height: text.height() - 3,
-                fill: comment.hexColor,
+                fill: comment.color,
                 padding: 5,
                 margin: 5
             });
@@ -117,24 +158,23 @@
             rect.offsetX(offsetX);
             rect.offsetY(offsetY);
 
-
             return ({
                 text: text,
                 rect: rect
             });
         }
 
-        function DeleteDot(id) {
-            //call api
-            return $.ajax({
-                url: "api/CommentedDots/DeleteDot?id=" + id,
-                type: "DELETE",
-                success: onLoad()
+        function setStage() {
+            var width = window.innerWidth;
+            var height = window.innerHeight;
+
+            var stage = new Konva.Stage({
+                container: 'container',
+                width: width,
+                height: height,
             });
-
-            //onLoad();
+            return stage;
         }
-
     </script>
 </body>
 </html>

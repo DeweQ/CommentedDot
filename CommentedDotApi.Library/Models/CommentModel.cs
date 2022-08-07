@@ -7,5 +7,6 @@ namespace CommentedDotApi.Library.Models
         public int Id { get; set; }
         public string Text { get; set; }
         public string HEXColor { get; set; }
+        public int DotModelId { get; set; }
     }
 }

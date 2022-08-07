@@ -11,11 +11,11 @@ namespace CommentedDotApi.Controllers
     [ApiController]
     public class CommentedDotsController : ControllerBase
     {
-        private readonly AppDbContext Db;
+        private readonly AppDbContext _db;
 
         public CommentedDotsController(AppDbContext db)
         {
-            Db = db;
+            _db = db;
         }
 
         [HttpPost]
@@ -58,11 +58,11 @@ namespace CommentedDotApi.Controllers
             };
             d1.Comments.AddRange(new[] { c1, c3 });
             d2.Comments.AddRange(new[] { c2, c4 });
-            using (Db)
+            using (_db)
             {
-                Db.Comments.AddRange(new[] { c1, c2, c3, c4 });
-                Db.Dots.AddRange(new[] { d1, d2 });
-                Db.SaveChanges();
+                _db.Comments.AddRange(new[] { c1, c2, c3, c4 });
+                _db.Dots.AddRange(new[] { d1, d2 });
+                _db.SaveChanges();
             }
         }
 
@@ -72,25 +72,25 @@ namespace CommentedDotApi.Controllers
         {
             List<DotModel> result = new List<DotModel>();
 
-            using (Db)
-            {
-                result = Db.Dots.Include(d=> d.Comments).ToList();
+            using (_db)
+            { 
+                result = _db.Dots.Include(d => d.Comments).ToList();
             }
 
-                return result;
+            return result;
         }
 
         [HttpDelete]
         [Route("DeleteDot")]
         public void DeleteDot(int id)
         {
-            using (Db)
+            using (_db)
             {
-                var removingDot = Db.Dots.FirstOrDefault(d => d.Id == id);
+                var removingDot = _db.Dots.FirstOrDefault(d => d.Id == id);
                 if (removingDot != null)
                 {
-                    Db.Dots.Remove(removingDot);
-                    Db.SaveChanges();
+                    _db.Dots.Remove(removingDot);
+                    _db.SaveChanges();
                 }
 
             }
